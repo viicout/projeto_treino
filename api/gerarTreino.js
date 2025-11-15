@@ -1,3 +1,7 @@
+const model = client.getGenerativeModel({
+  model: "gemini-pro"
+});
+
 export default async function handler(req, res) {
   // Aceita somente POST
   if (req.method !== "POST") {
