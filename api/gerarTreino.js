@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
 
   const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = client.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
   const prompt = `
 Gere um treino completo dividido em ${dados.diasTreino} dias.
