@@ -1,0 +1,123 @@
+/*(1) Melhorar visual da DIVISÃO DE TREINOS*/
+
+/* Caixa de treinos */
+#workoutBox {
+  color: #e8e8e8 !important; 
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Bloquinhos de cada dia */
+.workout-day {
+  background: #1f1f1f;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border: 1px solid #333;
+}
+
+/* Título do dia */
+.workout-day h5 {
+  color: #69b7ff;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Títulos de seções (mobilidade, aquecimento, treino, alongamento) */
+.section-title {
+  color: #ffd166;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+/* Itens da lista */
+.workout-day ul {
+  margin-top: 5px;
+  padding-left: 16px;
+}
+
+.workout-day li {
+  margin-bottom: 4px;
+}
+
+
+
+/*Melhorar o HISTÓRICO (contraste alto + visual bonito)*/
+
+
+
+/* Caixa do histórico */
+#historyList {
+  color: #f0f0f0;
+}
+
+/* Cada item */
+.history-item {
+  background: #1d1d1d;
+  border: 1px solid #333;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* Data */
+.history-item .history-date {
+  color: #8ecaff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Meta */
+.history-item .history-goal {
+  color: #ffd166;
+  font-size: 0.85rem;
+}
+
+/* Experiência */
+.history-item .history-exp {
+  color: #baffc9;
+  font-size: 0.85rem;
+}
+
+
+
+/* ANIMAÇÕES */
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+
+/* Atualize o CSS para o acordeão moderno */
+
+.accordion-button {
+  background-color: #1f1f1f !important;
+  color: #e8e8e8 !important;
+  border: none;
+}
+
+.accordion-button:not(.collapsed) {
+  color: #69b7ff !important;
+  background-color: #292929 !important;
+}
+
+.accordion-body {
+  background: #1b1b1b !important;
+  color: #f1f1f1 !important;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.accordion-item {
+  border: 1px solid #333 !important;
+  border-radius: 10px !important;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
