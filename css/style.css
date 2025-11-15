@@ -1,123 +1,177 @@
-/*(1) Melhorar visual da DIVISÃO DE TREINOS*/
-
-/* Caixa de treinos */
-#workoutBox {
-  color: #e8e8e8 !important; 
-  font-size: 0.95rem;
-  line-height: 1.4;
+/* -------------------
+   Global
+------------------- */
+body.bg-dark {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Bloquinhos de cada dia */
-.workout-day {
-  background: #1f1f1f;
-  padding: 16px;
-  border-radius: 10px;
-  margin-bottom: 14px;
-  border: 1px solid #333;
+.text-muted-light {
+  color: #aaa !important;
 }
 
-/* Título do dia */
-.workout-day h5 {
-  color: #69b7ff;
-  font-weight: 600;
-  margin-bottom: 8px;
+/* -------------------
+   Gradiente título
+------------------- */
+.gradient-title {
+  font-weight: 700;
+  background: linear-gradient(90deg, #ff7f50, #ff1493, #00bfff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Títulos de seções (mobilidade, aquecimento, treino, alongamento) */
-.section-title {
-  color: #ffd166;
-  font-weight: 600;
-  margin-top: 10px;
+/* -------------------
+   Cards
+------------------- */
+.bg-card {
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 
-/* Itens da lista */
-.workout-day ul {
-  margin-top: 5px;
-  padding-left: 16px;
+/* -------------------
+   Inputs e selects
+------------------- */
+.bg-input {
+  background-color: #2c2c2c;
+  color: #fff;
+  border: 1px solid #444;
 }
 
-.workout-day li {
-  margin-bottom: 4px;
+.bg-input:focus, .form-select:focus {
+  border-color: #ff7f50;
+  box-shadow: 0 0 5px #ff7f50;
+  outline: none;
 }
 
-
-
-/*Melhorar o HISTÓRICO (contraste alto + visual bonito)*/
-
-
-
-/* Caixa do histórico */
-#historyList {
-  color: #f0f0f0;
-}
-
-/* Cada item */
-.history-item {
-  background: #1d1d1d;
-  border: 1px solid #333;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-/* Data */
-.history-item .history-date {
-  color: #8ecaff;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-/* Meta */
-.history-item .history-goal {
-  color: #ffd166;
-  font-size: 0.85rem;
-}
-
-/* Experiência */
-.history-item .history-exp {
-  color: #baffc9;
-  font-size: 0.85rem;
-}
-
-
-
-/* ANIMAÇÕES */
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-
-
-
-/* Atualize o CSS para o acordeão moderno */
-
+/* -------------------
+   Accordion e treino
+------------------- */
 .accordion-button {
-  background-color: #1f1f1f !important;
-  color: #e8e8e8 !important;
-  border: none;
+  background-color: #2a2a2a;
+  color: #fff;
+  border-radius: 8px;
 }
 
 .accordion-button:not(.collapsed) {
-  color: #69b7ff !important;
-  background-color: #292929 !important;
+  background-color: #ff7f50;
+  color: #fff;
 }
 
 .accordion-body {
-  background: #1b1b1b !important;
-  color: #f1f1f1 !important;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
+  background-color: #1e1e1e;
 }
 
-.accordion-item {
-  border: 1px solid #333 !important;
-  border-radius: 10px !important;
-  margin-bottom: 10px;
-  overflow: hidden;
+.section-title {
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  color: #ff7f50;
+}
+
+/* -------------------
+   Tabela custom
+------------------- */
+.table-custom {
+  color: #fff;
+}
+
+.table-custom th {
+  border-bottom: 1px solid #444;
+  color: #ff7f50;
+}
+
+.table-custom td {
+  border-bottom: 1px solid #333;
+}
+
+/* -------------------
+   Botões
+------------------- */
+.btn-primary {
+  background-color: #ff7f50;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #ff6347;
+}
+
+.btn-outline-light {
+  color: #fff;
+  border-color: #fff;
+}
+
+.btn-outline-light:hover {
+  background-color: #ff7f50;
+  border-color: #ff7f50;
+  color: #fff;
+}
+
+.btn-outline-info {
+  color: #00bfff;
+  border-color: #00bfff;
+}
+
+.btn-outline-info:hover {
+  background-color: #00bfff;
+  color: #121212;
+}
+
+.btn-outline-warning {
+  color: #ffb400;
+  border-color: #ffb400;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffb400;
+  color: #121212;
+}
+
+/* -------------------
+   Histórico
+------------------- */
+.history-item {
+  background-color: #2a2a2a;
+  padding: 8px;
+  margin-bottom: 5px;
+  border-radius: 6px;
+}
+
+.history-date {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.history-goal, .history-exp {
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+/* -------------------
+   Spinner / progresso
+------------------- */
+#trainProgress {
+  display: flex;
+  align-items: center;
+}
+
+#trainProgressText {
+  margin-left: 10px;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+/* -------------------
+   Responsivo
+------------------- */
+@media (max-width: 992px) {
+  .accordion-button {
+    font-size: 0.9rem;
+  }
+  .section-title {
+    font-size: 0.9rem;
+  }
 }
