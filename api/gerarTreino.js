@@ -1,57 +1,73 @@
-import 'dotenv/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// api/gerarTreino.js
+import express from 'express';
+import fetch from 'node-fetch'; // caso precise
+const router = express.Router();
 
-const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = client.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ erro: true, mensagem: 'Método não permitido' });
-  }
-
+// Endpoint POST /api/gerarTreino
+router.post('/', async (req, res) => {
   try {
-    const payload = req.body;
-    console.log('Payload recebido:', payload);
+    const { diasTreino = 3, objetivo, nivel, tipoTreino, nome, foco = [], tempo = 45, limitacoes } = req.body;
 
-    // Criar prompt detalhado para a IA
+    // Transformar foco em string, separando por vírgula
+    const focoStr = Array.isArray(foco) ? foco.join(', ') : foco;
+
+    // Prompt detalhado para IA
     const prompt = `
-      Gere um plano de treino para ${payload.diasTreino} dias
-      Objetivo: ${payload.objetivo}
-      Tipo de treino: ${payload.tipoTreino}
-      Nível: ${payload.nivel}
-      Tempo por sessão: ${payload.tempo} minutos
-      Foco: ${payload.foco.join(', ')}
-      Limitações: ${payload.limitacoes || 'Nenhuma'}
-      
-      Retorne um JSON estruturado com:
-      [
-        { "dayName": "Dia 1", "mobility": [], "warmup": [], "main": [], "stretch": [] },
-        ...
-      ]
-      Não retorne texto adicional fora do JSON.
-    `;
-    console.log('Prompt enviado à IA:', prompt);
+Gere um plano de treino para ${diasTreino} dias baseado nos dados abaixo:
+- Objetivo: ${objetivo}
+- Tipo de treino: ${tipoTreino}
+- Nível: ${nivel}
+- Tempo por sessão: ${tempo} minutos
+- Foco: ${focoStr}
+- Limitações: ${limitacoes || 'Nenhuma'}
 
-    const response = await model.generateText({ 
-      prompt,
-      temperature: 0.7,
-      maxOutputTokens: 800
-    });
+Cada dia deve ter um nome (Dia 1, Dia 2, ...) e incluir:
+- mobilidade: 2 a 3 exercícios
+- aquecimento: 2 a 3 exercícios
+- treino principal: 4 a 6 exercícios com séries e repetições
+- alongamento: 2 a 3 exercícios
 
-    console.log('Resposta bruta da IA:', response);
+Retorne apenas **JSON estruturado** no seguinte formato:
 
-    // Tentar extrair JSON do texto da IA
-    let json;
+[
+  {
+    "dayName": "Dia 1",
+    "mobility": ["ex1", "ex2"],
+    "warmup": ["ex1", "ex2"],
+    "main": [{"name":"ex1","sets":"3","reps":"10"}, ...],
+    "stretch": ["ex1","ex2"]
+  },
+  ...
+]
+
+Não inclua nenhum texto fora do JSON.
+`;
+
+    // Import dinâmico do Gemini
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = client.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+
+    // Chamada para gerar o texto
+    const response = await model.generateText({ prompt });
+    const text = response.output?.[0]?.content?.[0]?.text;
+
+    if (!text) return res.status(500).json({ erro: true, mensagem: 'IA não retornou conteúdo' });
+
+    // Parse JSON retornado pela IA
+    let program;
     try {
-      json = JSON.parse(response.outputText || response.text || '{}');
+      program = JSON.parse(text);
     } catch (e) {
-      console.error('Erro ao parsear JSON:', e, response);
-      return res.status(500).json({ erro: true, mensagem: 'Resposta da IA não pôde ser parseada como JSON', response });
+      console.error('Erro ao parsear JSON da IA:', text, e);
+      return res.status(500).json({ erro: true, mensagem: 'Erro ao parsear resposta da IA' });
     }
 
-    return res.status(200).json({ program: json });
+    res.json({ program });
   } catch (err) {
-    console.error('Erro interno no handler:', err);
-    return res.status(500).json({ erro: true, mensagem: 'Erro interno no servidor', detalhe: String(err) });
+    console.error('Erro gerarTreino:', err);
+    res.status(500).json({ erro: true, mensagem: 'API retornou status 500' });
   }
-}
+});
+
+export default router;
