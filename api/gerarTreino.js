@@ -1,82 +1,62 @@
 // api/gerarTreino.js
-import express from 'express';
-import 'dotenv/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const app = express.Router();
-
-app.post('/api/gerarTreino', async (req, res) => {
+// Endpoint para gerar treino
+export default async function gerarTreino(req, res) {
   try {
-    const payload = req.body;
-
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ erro: true, mensagem: 'Chave da API não configurada.' });
+    if (req.method !== "POST") {
+      return res.status(405).json({ erro: true, mensagem: "Método não permitido" });
     }
 
-    const client = new GoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY
-    });
+    const body = req.body || {};
+    console.log("Payload recebido:", body);
 
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ erro: true, mensagem: "GEMINI_API_KEY não definida" });
+    }
+
+    const client = new GoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
     const model = client.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
-    // Cria prompt detalhado
+    // Monta prompt detalhado
     const prompt = `
-Gere um treino personalizado em formato JSON. 
-O usuário enviou: ${JSON.stringify(payload)}.
-O JSON deve ter a estrutura:
-
+Gere um treino personalizado em JSON, considerando:
+- Dias de treino: ${body.diasTreino || 3}
+- Objetivo: ${body.objetivo || "hipertrofia"}
+- Tipo de treino: ${body.tipoTreino || "musculacao"}
+- Foco: ${body.foco || []}
+- Tempo de treino: ${body.tempo || 45} minutos
+- Limitações: ${body.limitacoes || ""}
+Formato JSON:
 {
   "program": [
     {
       "dayName": "Dia 1",
-      "mobility": ["..."],
-      "warmup": ["..."],
-      "main": [
-        { "name": "...", "sets": "...", "reps": "..." }
-      ],
-      "stretch": ["..."]
+      "mobility": [],
+      "warmup": [],
+      "main": [],
+      "stretch": []
     }
   ]
 }
-Sem texto extra, apenas JSON válido.
+Não escreva texto fora do JSON.
 `;
 
-    const response = await model.chat({
-      messages: [
-        { role: 'user', content: prompt }
-      ]
+    console.log("Prompt enviado à IA:", prompt);
+
+    // Chamada à IA
+    const response = await model.generateText({
+      prompt,
+      maxOutputTokens: 1000
     });
 
-    // O retorno do Gemini vem em response.output[0].content[0].text
-    let outputText = '';
-    if (response?.output?.length > 0 && response.output[0]?.content?.length > 0) {
-      outputText = response.output[0].content[0].text;
-    }
+    console.log("Retorno bruto da IA:", response);
 
-    // Tenta parsear JSON
-    let treinoJson;
-    try {
-      treinoJson = JSON.parse(outputText);
-    } catch (err) {
-      return res.status(500).json({ erro: true, mensagem: 'Falha ao parsear JSON da IA', detalhe: err.message, raw: outputText });
-    }
-
-    res.json(treinoJson);
+    // Retorna texto bruto para debug (não faz parse JSON ainda)
+    res.status(200).json({ textoBruto: response.outputText || response.text || "" });
 
   } catch (err) {
-    console.error('Erro gerarTreino:', err);
-    res.status(500).json({ erro: true, mensagem: err.message || err.toString() });
+    console.error("Erro gerando treino:", err);
+    res.status(500).json({ erro: true, mensagem: String(err) });
   }
-});
-
-// Exporta o router
-app.use(app);
-
-
-try {
-  const response = await model.generateText({ prompt });
-  console.log('Retorno bruto da IA:', response);
-} catch (err) {
-  console.error('Erro gerando treino:', err);
-  res.status(500).json({ erro: true, mensagem: String(err) });
 }
