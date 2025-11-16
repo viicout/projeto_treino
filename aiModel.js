@@ -1,9 +1,10 @@
-export async function runAI(payload) {
+// aiModel.js — chama /api/gerarTreino e retorna o JSON (ou mensagem de erro)
+export async function runAI(promptPayload) {
   try {
-    const resp = await fetch('http://localhost:3000/api/gerarTreino', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const resp = await fetch("/api/gerarTreino", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(promptPayload)
     });
 
     if (!resp.ok) {
@@ -12,10 +13,16 @@ export async function runAI(payload) {
     }
 
     const json = await resp.json();
-    return json;
+
+    // Normaliza resposta, garantindo que sempre tenha "program"
+    if (json.program && Array.isArray(json.program)) {
+      return json;
+    } else {
+      return { program: [] };
+    }
 
   } catch (err) {
-    console.error('runAI error:', err);
+    console.error("runAI error:", err);
     return { erro: true, mensagem: String(err.message || err) };
   }
 }

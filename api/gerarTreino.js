@@ -1,79 +1,38 @@
-const model = client.getGenerativeModel({
-  model: "gemini-pro"
-});
+// api/gerarTreino.js
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export default async function handler(req, res) {
-  // Aceita somente POST
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Use método POST." });
-  }
-
-  // Ler o JSON manualmente (Node/Vercel não usa req.body)
-  let body = "";
-  await new Promise((resolve) => {
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", resolve);
-  });
-
-  let dados;
+export default async function gerarTreino(req, res) {
   try {
-    dados = JSON.parse(body);
-  } catch (e) {
-    return res.status(400).json({ error: "JSON inválido enviado." });
-  }
+    // Cria o client usando a chave do Vercel (ou do .env)
+    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-  // Import dinâmico do Gemini
-  const { GoogleGenerativeAI } = await import("@google/generative-ai");
-
-  const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = client.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
-  const prompt = `
-Gere um treino completo dividido em ${dados.diasTreino} dias.
-Objetivo: ${dados.objetivo}.
-Nível: ${dados.nivel}.
-Tipo: ${dados.tipoTreino}.
-
-Cada dia deve conter:
-1. Mobilidade (3-5 exercícios)
-2. Aquecimento (3-5 exercícios)
-3. Treino Principal (6-10 exercícios)
-4. Alongamento (2-4 exercícios)
-
-Retorne somente JSON no formato:
-{
-  "treino": [
-    {
-      "dia": "Dia 1",
-      "mobilidade": ["...", "..."],
-      "aquecimento": ["...", "..."],
-      "principal": ["...", "..."],
-      "alongamento": ["...", "..."]
-    }
-  ]
-}
-  `;
-
-  try {
-    const result = await model.generateContent(prompt);
-
-    // Texto bruto da IA
-    let resposta = result.response.text();
-
-    // Remover ```json ``` e demais bordas
-    resposta = resposta.replace(/```json/g, "")
-                       .replace(/```/g, "")
-                       .trim();
-
-    // Tentar converter JSON
-    const treinoJson = JSON.parse(resposta);
-
-    return res.status(200).json(treinoJson);
-
-  } catch (err) {
-    return res.status(500).json({
-      error: "Falha na geração do treino.",
-      detalhe: err.message
+    // Seleciona o modelo
+    const model = client.getGenerativeModel({
+      model: "gemini-1.5-flash-latest"
     });
+
+    // Prompt baseado nos dados do front-end
+    const prompt = `
+      Gere um programa de treino em JSON para um usuário com as seguintes informações:
+      Nome: ${req.body.nome}
+      Idade: ${req.body.idade || '-'}
+      Peso: ${req.body.peso || '-'}
+      Objetivo: ${req.body.objetivo}
+      Tipo de treino: ${req.body.tipoTreino}
+      Dias de treino: ${req.body.diasTreino}
+      Foco: ${req.body.foco || []}
+      Tempo por sessão: ${req.body.tempo || 45} minutos
+      Limitações: ${req.body.limitacoes || 'nenhuma'}
+      Retorne um JSON estruturado com "program": [ { dayName, mobility, warmup, main, stretch } ].
+    `;
+
+    // Chama a IA para gerar o treino
+    const result = await model.generateText({ prompt });
+
+    // Retorna o JSON
+    res.json(JSON.parse(result.text));
+  } catch (err) {
+    console.error("Erro gerarTreino:", err);
+    res.status(500).json({ erro: true, mensagem: err.message || String(err) });
   }
 }

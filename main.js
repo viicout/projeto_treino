@@ -1,6 +1,7 @@
+// main.js — controlador principal
 import { renderProgramToDom, renderHistory } from './domRenderer.js';
+import PDFGenerator from './pdfGenerator.js';
 import { normalizeAIResponse } from './workoutGenerator.js';
-import { getExercises } from './exerciseDB.js';
 
 const STORAGE_KEY = 'trainforge_modular_v1';
 
@@ -16,9 +17,14 @@ const el = {
   limitations: document.getElementById('limitations'),
   generateBtn: document.getElementById('generateBtn'),
   resetBtn: document.getElementById('resetBtn'),
+  printBtn: document.getElementById('printBtn'),
+  downloadAllPdfBtn: document.getElementById('downloadAllPdfBtn'),
   workoutBox: document.getElementById('workoutBox'),
   historyList: document.getElementById('historyList'),
-  clearHistoryBtn: document.getElementById('clearHistoryBtn')
+  clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+  exportAllBtn: document.getElementById('exportAllBtn'),
+  trainProgress: document.getElementById('trainProgress'),
+  trainProgressText: document.getElementById('trainProgressText')
 };
 
 function uid(){ return Date.now() + Math.floor(Math.random()*999); }
@@ -44,33 +50,70 @@ function formValues(){
   };
 }
 
-function generateLocalWorkout() {
+async function generateAndRender(){
   const form = formValues();
-  const exercises = getExercises();
-  const tipo = form.type;
-  const foco = form.focus[0] || 'peito';
-  const program = [];
+  el.generateBtn.disabled = true;
+  const prevText = el.generateBtn.innerText;
+  el.generateBtn.innerText = "Gerando...";
 
-  for(let i=0;i<form.sessions;i++){
-    program.push({
-      dayName: `Dia ${i+1}`,
-      mobility: exercises.mobility,
-      warmup: exercises.warmups,
-      main: exercises[tipo][foco].slice(0,5).map(ex => ({...ex, sets: 3, reps: 12})),
-      stretch: exercises.stretching
+  if (el.trainProgress) { el.trainProgress.style.display = 'block'; el.trainProgressText.textContent = 'Chamando IA...'; }
+
+  try {
+    const payload = {
+      diasTreino: Number(form.sessions) || 3,
+      objetivo: form.goal,
+      nivel: form.level,
+      tipoTreino: form.type,
+      nome: form.name,
+      foco: form.focus,
+      tempo: Number(form.time) || 45,
+      limitacoes: form.limitations
+    };
+
+    // chama o endpoint local da IA online
+    const resp = await fetch('/api/gerarTreino', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-  }
 
-  const rec = { id: uid(), createdAt: new Date().toISOString(), form, program };
-  renderProgramToDom(el.workoutBox, rec);
-  history.unshift(rec); history = history.slice(0,80); saveHistory(history);
-  renderHistory(el.historyList, history);
+    if(!resp.ok) throw new Error(`API retornou status ${resp.status}`);
+    const aiResp = await resp.json();
+
+    if(aiResp.erro){
+      el.workoutBox.innerHTML = `<div class="alert alert-danger">Erro: ${aiResp.mensagem}</div>`;
+    } else {
+      const norm = normalizeAIResponse(aiResp);
+      const rec = { id: uid(), createdAt: new Date().toISOString(), form: Object.assign({}, form, { levelUsed: form.level }), program: norm.program || [] };
+      renderProgramToDom(el.workoutBox, rec);
+      history.unshift(rec);
+      history = history.slice(0,80);
+      saveHistory(history);
+      renderHistory(el.historyList, history);
+    }
+
+  } catch(err) {
+    console.error('generateAndRender error', err);
+    el.workoutBox.innerHTML = `<div class="alert alert-danger">Erro ao gerar treino: ${err.message || err}</div>`;
+  } finally {
+    if(el.trainProgress) el.trainProgress.style.display = 'none';
+    el.generateBtn.disabled = false;
+    el.generateBtn.innerText = prevText;
+  }
 }
 
-el.generateBtn.addEventListener('click', generateLocalWorkout);
-el.resetBtn.addEventListener('click', () => {
+// binds
+if(el.generateBtn) el.generateBtn.addEventListener('click', generateAndRender);
+if(el.resetBtn) el.resetBtn.addEventListener('click', () => {
   el.name.value=''; el.age.value=''; el.weight.value=''; el.time.value=45; el.sessions.value=3;
   el.goal.value='hipertrofia'; el.type.value='musculacao'; el.level.value='auto'; el.limitations.value='';
   document.querySelectorAll('input[name="focus"]').forEach((c,i)=> c.checked = i===0);
 });
-el.clearHistoryBtn.addEventListener('click', () => { if(!confirm('Apagar histórico?')) return; history=[]; saveHistory(history); renderHistory(el.historyList, history); el.workoutBox.innerHTML = `<p class="text-muted-light">Histórico limpo.</p>`; });
+if(el.printBtn) el.printBtn.addEventListener('click', () => window.print());
+if(el.downloadAllPdfBtn) el.downloadAllPdfBtn.addEventListener('click', () => PDFGenerator.generatePDFFromHtml(el.workoutBox.innerHTML));
+if(el.clearHistoryBtn) el.clearHistoryBtn.addEventListener('click', () => { if(!confirm('Apagar todo o histórico?')) return; history=[]; saveHistory(history); renderHistory(el.historyList, history); el.workoutBox.innerHTML = `<p class="text-muted-light">Histórico limpo.</p>`; });
+if(el.exportAllBtn) el.exportAllBtn.addEventListener('click', () => {
+  if(!history || !history.length) return alert('Sem histórico para exportar.');
+  const blob = new Blob([JSON.stringify(history,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `trainforge_history_${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href);
+});
