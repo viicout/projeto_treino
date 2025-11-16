@@ -1,67 +1,73 @@
 // api/gerarTreino.js
 import express from 'express';
-import cors from 'cors';
 import 'dotenv/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const app = express();
-const port = process.env.PORT || 3000;
+const app = express.Router();
 
-app.use(cors());
-app.use(express.json());
-
-// Endpoint POST para gerar treino
 app.post('/api/gerarTreino', async (req, res) => {
   try {
-    const data = req.body;
-    const { diasTreino, objetivo, nivel, tipoTreino, nome, foco, tempo, limitacoes } = data;
+    const payload = req.body;
 
-    // Cria cliente Gemini
-    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = client.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
-
-    // Cria prompt detalhado para IA gerar JSON
-    const prompt = `
-Você é um assistente de treino. Gere um JSON estruturado com ${diasTreino} dias de treino distintos.
-O usuário se chama "${nome}", objetivo: "${objetivo}", nível: "${nivel}", tipo: "${tipoTreino}", tempo: ${tempo} min por treino, foco: ${foco.join(', ')}, limitações: "${limitacoes}".
-JSON deve ter estrutura:
-{
-  "program": [
-    { "dia": 1, "treinos": [ { "musculo": "", "exercicio": "", "tipo": "", "series": "", "repeticoes": "" }, ... ] },
-    { "dia": 2, "treinos": [ ... ] },
-    ...
-  ]
-}
-Não inclua explicações, apenas o JSON válido.
-    `;
-
-    // Chamada correta usando generateMessage()
-    const response = await model.generateMessage({
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      maxOutputTokens: 1000
-    });
-
-    let aiOutput = response?.candidates?.[0]?.content?.[0]?.text || '';
-
-    // Tenta parsear JSON
-    let program = [];
-    try {
-      program = JSON.parse(aiOutput).program;
-    } catch (e) {
-      console.error('Erro parseando JSON da IA:', e);
-      return res.json({ erro: true, mensagem: 'Erro ao interpretar resposta da IA.' });
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ erro: true, mensagem: 'Chave da API não configurada.' });
     }
 
-    return res.json({ program });
+    const client = new GoogleGenerativeAI({
+      apiKey: process.env.GEMINI_API_KEY
+    });
+
+    const model = client.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+
+    // Cria prompt detalhado
+    const prompt = `
+Gere um treino personalizado em formato JSON. 
+O usuário enviou: ${JSON.stringify(payload)}.
+O JSON deve ter a estrutura:
+
+{
+  "program": [
+    {
+      "dayName": "Dia 1",
+      "mobility": ["..."],
+      "warmup": ["..."],
+      "main": [
+        { "name": "...", "sets": "...", "reps": "..." }
+      ],
+      "stretch": ["..."]
+    }
+  ]
+}
+Sem texto extra, apenas JSON válido.
+`;
+
+    const response = await model.chat({
+      messages: [
+        { role: 'user', content: prompt }
+      ]
+    });
+
+    // O retorno do Gemini vem em response.output[0].content[0].text
+    let outputText = '';
+    if (response?.output?.length > 0 && response.output[0]?.content?.length > 0) {
+      outputText = response.output[0].content[0].text;
+    }
+
+    // Tenta parsear JSON
+    let treinoJson;
+    try {
+      treinoJson = JSON.parse(outputText);
+    } catch (err) {
+      return res.status(500).json({ erro: true, mensagem: 'Falha ao parsear JSON da IA', detalhe: err.message, raw: outputText });
+    }
+
+    res.json(treinoJson);
 
   } catch (err) {
     console.error('Erro gerarTreino:', err);
-    res.json({ erro: true, mensagem: err.message || 'Erro desconhecido.' });
+    res.status(500).json({ erro: true, mensagem: err.message || err.toString() });
   }
 });
 
-// Se estiver rodando localmente
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});
+// Exporta o router
+app.use(app);
