@@ -71,3 +71,12 @@ Sem texto extra, apenas JSON válido.
 
 // Exporta o router
 app.use(app);
+
+
+try {
+  const response = await model.generateText({ prompt });
+  console.log('Retorno bruto da IA:', response);
+} catch (err) {
+  console.error('Erro gerando treino:', err);
+  res.status(500).json({ erro: true, mensagem: String(err) });
+}
