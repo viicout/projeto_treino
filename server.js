@@ -1,71 +1,38 @@
-// server.js — backend local para gerar treinos
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { getExercises } = require('./exerciseDB.js');
+// server.js
+import express from 'express';
+import fetch from 'node-fetch'; // npm install node-fetch
 
 const app = express();
-const PORT = 3000;
+app.use(express.json());
 
-// Middlewares
-app.use(cors());
-app.use(bodyParser.json());
+const PORT = process.env.PORT || 3000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // variável de ambiente
 
-// Rota de teste
-app.get('/', (req, res) => {
-  res.send('Servidor rodando!');
-});
+app.post('/api/gerarTreino', async (req, res) => {
+  const payload = req.body;
 
-// Rota para gerar treino
-app.post('/api/gerarTreino', (req, res) => {
   try {
-    const payload = req.body;
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1:generateText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GEMINI_API_KEY}`
+      },
+      body: JSON.stringify({
+        prompt: `Gere um treino baseado nesses dados: ${JSON.stringify(payload)}`,
+        temperature: 0.7,
+        maxOutputTokens: 500
+      })
+    });
 
-    const {
-      diasTreino = 3,
-      objetivo = 'hipertrofia',
-      nivel = 'auto',
-      tipoTreino = 'musculacao',
-      foco = [],
-      tempo = 45,
-      nome = 'Usuário',
-      limitacoes = ''
-    } = payload;
-
-    const exDB = getExercises();
-    const treino = [];
-
-    for (let i = 0; i < diasTreino; i++) {
-      const dayName = `Dia ${i + 1}`;
-      const main = [];
-
-      // Escolher exercícios aleatórios de cada foco
-      foco.forEach(musculo => {
-        const grupo = exDB[tipoTreino]?.[musculo] || [];
-        if (grupo.length > 0) {
-          const ex = grupo[Math.floor(Math.random() * grupo.length)];
-          main.push({ name: ex.name, sets: 3, reps: 10 });
-        }
-      });
-
-      treino.push({
-        dayName,
-        mobility: exDB.mobility.slice(0, 2),
-        warmup: exDB.warmups.slice(0, 2),
-        main,
-        stretch: exDB.stretching.slice(0, 2)
-      });
-    }
-
-    res.json({ program: treino });
+    const data = await response.json();
+    res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ erro: true, mensagem: 'Erro ao gerar treino local' });
+    res.status(500).json({ erro: true, mensagem: err.message });
   }
 });
 
-// Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });

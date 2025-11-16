@@ -1,10 +1,5 @@
-// main.js — controlador principal
 import { runAI } from './aiModel.js';
-import { renderProgramToDom, renderHistory } from './domRenderer.js';
-import PDFGenerator from './pdfGenerator.js';
-import { normalizeAIResponse } from './workoutGenerator.js';
-
-const STORAGE_KEY = 'trainforge_modular_v1';
+import { renderProgramToDom } from './domRenderer.js';
 
 const el = {
   name: document.getElementById('name'),
@@ -17,23 +12,12 @@ const el = {
   level: document.getElementById('level'),
   limitations: document.getElementById('limitations'),
   generateBtn: document.getElementById('generateBtn'),
-  resetBtn: document.getElementById('resetBtn'),
-  printBtn: document.getElementById('printBtn'),
-  downloadAllPdfBtn: document.getElementById('downloadAllPdfBtn'),
   workoutBox: document.getElementById('workoutBox'),
-  historyList: document.getElementById('historyList'),
-  clearHistoryBtn: document.getElementById('clearHistoryBtn'),
-  exportAllBtn: document.getElementById('exportAllBtn'),
-  toggleTheme: document.getElementById('toggleTheme')
+  trainProgress: document.getElementById('trainProgress'),
+  trainProgressText: document.getElementById('trainProgressText')
 };
 
-function uid(){ return Date.now() + Math.floor(Math.random()*999); }
-function getFocusChecked(){ return Array.from(document.querySelectorAll('input[name="focus"]:checked')).map(i=>i.value); }
-function loadHistory(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }catch(e){ return []; } }
-function saveHistory(h){ localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
-
-let history = loadHistory();
-renderHistory(el.historyList, history);
+function getFocusChecked(){ return []; }
 
 function formValues(){
   return {
@@ -55,51 +39,42 @@ async function generateAndRender(){
   el.generateBtn.disabled = true;
   const prevText = el.generateBtn.innerText;
   el.generateBtn.innerText = "Gerando...";
+  el.trainProgress.style.display = 'block';
+  el.trainProgressText.textContent = 'Chamando IA...';
 
   try {
     const payload = {
-      diasTreino: Number(form.sessions) || 3,
+      diasTreino: Number(form.sessions),
       objetivo: form.goal,
       nivel: form.level,
       tipoTreino: form.type,
       nome: form.name,
       foco: form.focus,
-      tempo: Number(form.time) || 45,
+      tempo: Number(form.time),
       limitacoes: form.limitations
     };
 
     const aiResp = await runAI(payload);
 
-    if (aiResp.erro) {
+    if(aiResp.erro){
       el.workoutBox.innerHTML = `<div class="alert alert-danger">Erro: ${aiResp.mensagem}</div>`;
     } else {
-      const norm = normalizeAIResponse(aiResp);
-      const rec = { id: uid(), createdAt: new Date().toISOString(), form: Object.assign({}, form, { levelUsed: form.level }), program: norm.program || [] };
+      // Cria objeto rec para renderizar
+      const rec = {
+        form,
+        createdAt: new Date().toISOString(),
+        program: aiResp.program || aiResp.treino || aiResp.plano || []
+      };
       renderProgramToDom(el.workoutBox, rec);
-      history.unshift(rec); history = history.slice(0,80); saveHistory(history);
-      renderHistory(el.historyList, history);
     }
 
-  } catch (err) {
-    el.workoutBox.innerHTML = `<div class="alert alert-danger">Erro ao gerar treino: ${err.message || err}</div>`;
+  } catch(err){
+    el.workoutBox.innerHTML = `<div class="alert alert-danger">Erro ao gerar treino: ${err.message}</div>`;
   } finally {
     el.generateBtn.disabled = false;
     el.generateBtn.innerText = prevText;
+    el.trainProgress.style.display = 'none';
   }
 }
 
-// binds
 el.generateBtn.addEventListener('click', generateAndRender);
-el.resetBtn.addEventListener('click', () => {
-  el.name.value=''; el.age.value=''; el.weight.value=''; el.time.value=45; el.sessions.value=3;
-  el.goal.value='hipertrofia'; el.type.value='musculacao'; el.level.value='auto'; el.limitations.value='';
-  document.querySelectorAll('input[name="focus"]').forEach((c,i)=> c.checked = i===0);
-});
-el.printBtn.addEventListener('click', () => window.print());
-el.downloadAllPdfBtn.addEventListener('click', () => PDFGenerator.generatePDFFromHtml(el.workoutBox.innerHTML));
-el.clearHistoryBtn.addEventListener('click', () => { if(!confirm('Apagar todo o histórico?')) return; history=[]; saveHistory(history); renderHistory(el.historyList, history); el.workoutBox.innerHTML = `<p class="text-muted-light">Histórico limpo.</p>`; });
-el.exportAllBtn.addEventListener('click', () => {
-  if(!history || !history.length) return alert('Sem histórico para exportar.');
-  const blob = new Blob([JSON.stringify(history,null,2)],{type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `trainforge_history_${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href);
-});
