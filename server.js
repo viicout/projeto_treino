@@ -1,54 +1,79 @@
-// server.js — backend simples Node.js + Express para gerar treinos
-import express from "express";
-import cors from "cors";
-import { getExercises } from "./exerciseDB.js";
+// server.js
+import express from 'express';
+import fetch from 'node-fetch'; // ou built-in fetch no Node 18+
+import bodyParser from 'body-parser';
+import cors from 'cors';
 
 const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
 const PORT = 3000;
 
-app.use(cors());
-app.use(express.json());
+// substitua com sua chave de API do Google Generative AI
+const API_KEY = 'SUA_CHAVE_DE_API';
 
-// rota teste
-app.get("/", (req, res) => res.send("Servidor funcionando"));
-
-// rota para gerar treino
-app.post("/api/gerarTreino", (req, res) => {
+app.post('/api/gerarTreino', async (req, res) => {
   try {
-    const { diasTreino = 3, objetivo = "hipertrofia", tipoTreino = "musculacao", foco = [], tempo = 45 } = req.body;
-    const exercisesDB = getExercises();
+    const payload = req.body;
 
-    const program = [];
+    // montar prompt para IA
+    const prompt = `
+      Gere um plano de treino de ${payload.diasTreino} dias
+      para ${payload.nome || 'usuário'}.
+      Objetivo: ${payload.objetivo}
+      Tipo de treino: ${payload.tipoTreino}
+      Nível: ${payload.nivel}
+      Foco: ${payload.foco.join(', ') || 'geral'}
+      Tempo por sessão: ${payload.tempo} minutos
+      Limitações: ${payload.limitacoes || 'nenhuma'}
+      Retorne em JSON no formato:
+      {
+        "program": [
+          {
+            "dayName": "Dia 1",
+            "mobility": ["..."],
+            "warmup": ["..."],
+            "main": [{"name":"...", "sets":3, "reps":"10"}],
+            "stretch": ["..."]
+          }
+        ]
+      }
+    `;
 
-    for (let i = 0; i < diasTreino; i++) {
-      const day = {
-        dayName: `Dia ${i + 1}`,
-        mobility: exercisesDB.mobility,
-        warmup: exercisesDB.warmups,
-        main: [],
-        stretch: exercisesDB.stretching
-      };
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1:generateText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        prompt,
+        temperature: 0.7,
+        maxOutputTokens: 1000
+      })
+    });
 
-      // adicionar exercícios principais conforme tipo e foco
-      foco.forEach(f => {
-        const list = exercisesDB[tipoTreino]?.[f] || [];
-        if (list.length) {
-          // pegar 2-3 exercícios randomicamente
-          const shuffled = list.sort(() => 0.5 - Math.random()).slice(0, 2);
-          day.main.push(...shuffled);
-        }
-      });
-
-      program.push(day);
+    if (!response.ok) {
+      const text = await response.text();
+      return res.status(response.status).send({ erro: true, mensagem: text });
     }
 
-    res.json({ program });
+    const data = await response.json();
+    // A IA geralmente retorna texto em data.candidates[0].output
+    let treinoJson;
+    try {
+      treinoJson = JSON.parse(data.candidates[0].output);
+    } catch {
+      return res.status(500).send({ erro: true, mensagem: 'Erro ao interpretar JSON da IA' });
+    }
+
+    res.json(treinoJson);
+
   } catch (err) {
-    console.error("Erro API /gerarTreino:", err);
-    res.status(500).json({ erro: true, mensagem: "Falha ao gerar treino" });
+    console.error(err);
+    res.status(500).send({ erro: true, mensagem: String(err) });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
