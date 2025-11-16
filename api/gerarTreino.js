@@ -35,14 +35,15 @@ JSON deve ter estrutura:
 Não inclua explicações, apenas o JSON válido.
     `;
 
-    const response = await model.generateText({
-      prompt,
+    // Chamada correta usando generateMessage()
+    const response = await model.generateMessage({
+      messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       maxOutputTokens: 1000
     });
 
-    let aiOutput = response?.content?.[0]?.text || '';
-    
+    let aiOutput = response?.candidates?.[0]?.content?.[0]?.text || '';
+
     // Tenta parsear JSON
     let program = [];
     try {
