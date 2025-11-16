@@ -1,62 +1,57 @@
-// api/gerarTreino.js
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import 'dotenv/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Endpoint para gerar treino
-export default async function gerarTreino(req, res) {
+const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = client.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ erro: true, mensagem: 'Método não permitido' });
+  }
+
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ erro: true, mensagem: "Método não permitido" });
-    }
+    const payload = req.body;
+    console.log('Payload recebido:', payload);
 
-    const body = req.body || {};
-    console.log("Payload recebido:", body);
-
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ erro: true, mensagem: "GEMINI_API_KEY não definida" });
-    }
-
-    const client = new GoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-    const model = client.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
-    // Monta prompt detalhado
+    // Criar prompt detalhado para a IA
     const prompt = `
-Gere um treino personalizado em JSON, considerando:
-- Dias de treino: ${body.diasTreino || 3}
-- Objetivo: ${body.objetivo || "hipertrofia"}
-- Tipo de treino: ${body.tipoTreino || "musculacao"}
-- Foco: ${body.foco || []}
-- Tempo de treino: ${body.tempo || 45} minutos
-- Limitações: ${body.limitacoes || ""}
-Formato JSON:
-{
-  "program": [
-    {
-      "dayName": "Dia 1",
-      "mobility": [],
-      "warmup": [],
-      "main": [],
-      "stretch": []
-    }
-  ]
-}
-Não escreva texto fora do JSON.
-`;
+      Gere um plano de treino para ${payload.diasTreino} dias
+      Objetivo: ${payload.objetivo}
+      Tipo de treino: ${payload.tipoTreino}
+      Nível: ${payload.nivel}
+      Tempo por sessão: ${payload.tempo} minutos
+      Foco: ${payload.foco.join(', ')}
+      Limitações: ${payload.limitacoes || 'Nenhuma'}
+      
+      Retorne um JSON estruturado com:
+      [
+        { "dayName": "Dia 1", "mobility": [], "warmup": [], "main": [], "stretch": [] },
+        ...
+      ]
+      Não retorne texto adicional fora do JSON.
+    `;
+    console.log('Prompt enviado à IA:', prompt);
 
-    console.log("Prompt enviado à IA:", prompt);
-
-    // Chamada à IA
-    const response = await model.generateText({
+    const response = await model.generateText({ 
       prompt,
-      maxOutputTokens: 1000
+      temperature: 0.7,
+      maxOutputTokens: 800
     });
 
-    console.log("Retorno bruto da IA:", response);
+    console.log('Resposta bruta da IA:', response);
 
-    // Retorna texto bruto para debug (não faz parse JSON ainda)
-    res.status(200).json({ textoBruto: response.outputText || response.text || "" });
+    // Tentar extrair JSON do texto da IA
+    let json;
+    try {
+      json = JSON.parse(response.outputText || response.text || '{}');
+    } catch (e) {
+      console.error('Erro ao parsear JSON:', e, response);
+      return res.status(500).json({ erro: true, mensagem: 'Resposta da IA não pôde ser parseada como JSON', response });
+    }
 
+    return res.status(200).json({ program: json });
   } catch (err) {
-    console.error("Erro gerando treino:", err);
-    res.status(500).json({ erro: true, mensagem: String(err) });
+    console.error('Erro interno no handler:', err);
+    return res.status(500).json({ erro: true, mensagem: 'Erro interno no servidor', detalhe: String(err) });
   }
 }
