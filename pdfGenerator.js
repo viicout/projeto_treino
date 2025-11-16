@@ -1,7 +1,6 @@
-// pdfGenerator.js - usa jsPDF se disponível globalmente
+// pdfGenerator.js — gera PDF do treino
 const PDFGenerator = {
   generatePDFFromHtml(htmlContent) {
-    // tenta usar jsPDF (incluir script em index se quiser)
     if (window.jspdf && window.jspdf.jsPDF) {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
@@ -19,7 +18,6 @@ const PDFGenerator = {
       pdf.save(`treino_${Date.now()}.pdf`);
       return;
     }
-    // fallback: abrir print
     const w = window.open('', '_blank');
     w.document.write(htmlContent);
     w.document.close();
