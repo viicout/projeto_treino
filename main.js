@@ -1,5 +1,8 @@
-import { runAI } from './aiModel.js';
-import { renderProgramToDom } from './domRenderer.js';
+import { renderProgramToDom, renderHistory } from './domRenderer.js';
+import { normalizeAIResponse } from './workoutGenerator.js';
+import { getExercises } from './exerciseDB.js';
+
+const STORAGE_KEY = 'trainforge_modular_v1';
 
 const el = {
   name: document.getElementById('name'),
@@ -12,12 +15,19 @@ const el = {
   level: document.getElementById('level'),
   limitations: document.getElementById('limitations'),
   generateBtn: document.getElementById('generateBtn'),
+  resetBtn: document.getElementById('resetBtn'),
   workoutBox: document.getElementById('workoutBox'),
-  trainProgress: document.getElementById('trainProgress'),
-  trainProgressText: document.getElementById('trainProgressText')
+  historyList: document.getElementById('historyList'),
+  clearHistoryBtn: document.getElementById('clearHistoryBtn')
 };
 
-function getFocusChecked(){ return []; }
+function uid(){ return Date.now() + Math.floor(Math.random()*999); }
+function getFocusChecked(){ return Array.from(document.querySelectorAll('input[name="focus"]:checked')).map(i=>i.value); }
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }catch(e){ return []; } }
+function saveHistory(h){ localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
+
+let history = loadHistory();
+renderHistory(el.historyList, history);
 
 function formValues(){
   return {
@@ -34,47 +44,33 @@ function formValues(){
   };
 }
 
-async function generateAndRender(){
+function generateLocalWorkout() {
   const form = formValues();
-  el.generateBtn.disabled = true;
-  const prevText = el.generateBtn.innerText;
-  el.generateBtn.innerText = "Gerando...";
-  el.trainProgress.style.display = 'block';
-  el.trainProgressText.textContent = 'Chamando IA...';
+  const exercises = getExercises();
+  const tipo = form.type;
+  const foco = form.focus[0] || 'peito';
+  const program = [];
 
-  try {
-    const payload = {
-      diasTreino: Number(form.sessions),
-      objetivo: form.goal,
-      nivel: form.level,
-      tipoTreino: form.type,
-      nome: form.name,
-      foco: form.focus,
-      tempo: Number(form.time),
-      limitacoes: form.limitations
-    };
-
-    const aiResp = await runAI(payload);
-
-    if(aiResp.erro){
-      el.workoutBox.innerHTML = `<div class="alert alert-danger">Erro: ${aiResp.mensagem}</div>`;
-    } else {
-      // Cria objeto rec para renderizar
-      const rec = {
-        form,
-        createdAt: new Date().toISOString(),
-        program: aiResp.program || aiResp.treino || aiResp.plano || []
-      };
-      renderProgramToDom(el.workoutBox, rec);
-    }
-
-  } catch(err){
-    el.workoutBox.innerHTML = `<div class="alert alert-danger">Erro ao gerar treino: ${err.message}</div>`;
-  } finally {
-    el.generateBtn.disabled = false;
-    el.generateBtn.innerText = prevText;
-    el.trainProgress.style.display = 'none';
+  for(let i=0;i<form.sessions;i++){
+    program.push({
+      dayName: `Dia ${i+1}`,
+      mobility: exercises.mobility,
+      warmup: exercises.warmups,
+      main: exercises[tipo][foco].slice(0,5).map(ex => ({...ex, sets: 3, reps: 12})),
+      stretch: exercises.stretching
+    });
   }
+
+  const rec = { id: uid(), createdAt: new Date().toISOString(), form, program };
+  renderProgramToDom(el.workoutBox, rec);
+  history.unshift(rec); history = history.slice(0,80); saveHistory(history);
+  renderHistory(el.historyList, history);
 }
 
-el.generateBtn.addEventListener('click', generateAndRender);
+el.generateBtn.addEventListener('click', generateLocalWorkout);
+el.resetBtn.addEventListener('click', () => {
+  el.name.value=''; el.age.value=''; el.weight.value=''; el.time.value=45; el.sessions.value=3;
+  el.goal.value='hipertrofia'; el.type.value='musculacao'; el.level.value='auto'; el.limitations.value='';
+  document.querySelectorAll('input[name="focus"]').forEach((c,i)=> c.checked = i===0);
+});
+el.clearHistoryBtn.addEventListener('click', () => { if(!confirm('Apagar histórico?')) return; history=[]; saveHistory(history); renderHistory(el.historyList, history); el.workoutBox.innerHTML = `<p class="text-muted-light">Histórico limpo.</p>`; });

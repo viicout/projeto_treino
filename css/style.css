@@ -1,146 +1,173 @@
-/* Reset e base */
-body {
-  background-color: #121212;
-  color: #e0e0e0;
+/* ===== Body e container geral ===== */
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #0b0b1a, #1a0b3f);
+  color: #f0f0f5;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-a, a:hover {
-  text-decoration: none;
+/* Força todos os containers do Bootstrap a herdar o fundo */
+.container, .container-fluid, .main-container {
+  background: transparent !important;
 }
 
-/* Cards */
-.card {
-  background-color: #1e1e1e;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  border: none;
-}
 
-.bg-card {
-  background-color: #1e1e1e !important;
-}
-
-.bg-input {
-  background-color: #2a2a2a !important;
-  color: #fff !important;
-  border: 1px solid #444;
-}
-
-.form-select, .form-control {
-  border-radius: 8px;
-}
-
-.btn-primary {
-  background: linear-gradient(90deg, #ff7f50, #ff4500);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-}
-
-.btn-outline-light {
-  color: #fff;
-  border-color: #fff;
-}
-
-.btn-outline-light:hover {
-  background-color: #ff4500;
-  border-color: #ff4500;
-  color: #fff;
-}
-
-.btn-outline-info {
-  border-color: #00c8ff;
-  color: #00c8ff;
-}
-
-.btn-outline-info:hover {
-  background-color: #00c8ff;
-  color: #000;
-}
-
-.btn-outline-warning {
-  border-color: #ffbf00;
-  color: #ffbf00;
-}
-
-.btn-outline-warning:hover {
-  background-color: #ffbf00;
-  color: #000;
-}
-
-/* Accordion */
-.accordion-button {
-  background-color: #2a2a2a;
-  color: #fff;
-  font-weight: 500;
-}
-
-.accordion-button:not(.collapsed) {
-  background: linear-gradient(90deg, #ff7f50, #ff4500);
-  color: #fff;
-}
-
-.accordion-body {
-  background-color: #1c1c1c;
-  border-top: 1px solid #333;
-}
-
-.section-title {
-  font-weight: 600;
-  color: #ff7f50;
-  margin-top: 10px;
-}
-
-/* History */
-.history-item {
-  padding: 6px 8px;
-  border-bottom: 1px solid #333;
-  border-radius: 6px;
-  margin-bottom: 4px;
-}
-
-.history-date {
-  font-size: 0.75rem;
-  color: #aaa;
-}
-
-.history-goal, .history-exp {
-  font-size: 0.85rem;
-}
-
-/* Gradiente título */
-.gradient-title {
-  background: linear-gradient(90deg, #ff7f50, #ff4500);
+/* ===== Headers e títulos ===== */
+h1.gradient-title {
+  background: linear-gradient(90deg, #00c3ff, #8a00ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 700;
 }
-
-/* Spinner e progresso IA */
-#trainProgress {
-  display: flex;
-  align-items: center;
+h5.card-title {
+  color: #00c3ff;
 }
 
-/* Table custom */
-.table-custom th {
-  border-bottom: 1px solid #444;
+/* ===== Cards ===== */
+.card.bg-card {
+  background: linear-gradient(145deg, #0d0d1f, #1b1b2f);
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
-.table-custom td {
-  border-top: 1px solid #333;
+/* ===== Inputs e selects ===== */
+input.bg-input, select.bg-input {
+  background: #1b1b2f;
+  color: #f0f0f5;
+  border: 1px solid #333;
+  border-radius: 8px;
 }
-
-/* Footer */
-footer {
-  font-size: 0.75rem;
+input.bg-input::placeholder {
   color: #aaa;
 }
+input.bg-input:focus, select.bg-input:focus {
+  background: #22223b;
+  color: #f0f0f5;
+  border-color: #00c3ff;
+  box-shadow: 0 0 6px #00c3ff66;
+  outline: none;
+}
 
-/* Scroll do container */
-#workoutBox, #historyList {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding-right: 6px;
+/* ===== Botões ===== */
+.btn-primary {
+  background: linear-gradient(90deg, #00c3ff, #8a00ff);
+  border: none;
+  color: #fff;
+}
+.btn-outline-light {
+  border-color: #00c3ff;
+  color: #00c3ff;
+}
+.btn-outline-light:hover {
+  background: #1b1b2f;
+  color: #00c3ff;
+  border-color: #00c3ff;
+}
+.btn-outline-info {
+  border-color: #00c3ff;
+  color: #00c3ff;
+}
+.btn-outline-warning {
+  border-color: #ff8a00;
+  color: #ff8a00;
+}
+
+/* ===== Accordion ===== */
+.accordion-button {
+  background: linear-gradient(145deg, #0d0d1f, #1b1b2f);
+  color: #f0f0f5;
+  font-weight: 500;
+}
+.accordion-button:not(.collapsed) {
+  background: linear-gradient(145deg, #11112b, #2a1b3f);
+  color: #00c3ff;
+  box-shadow: 0 0 8px #00c3ff66;
+}
+.accordion-body {
+  background: #1b1b2f;
+  color: #f0f0f5;
+  border-radius: 0 0 12px 12px;
+}
+
+/* ===== Seções ===== */
+.section-title {
+  font-weight: 600;
+  color: #00c3ff;
+  margin-top: 10px;
+}
+
+/* ===== Listas de mobilidade, aquecimento, alongamento ===== */
+.accordion-body ul {
+  background: #0d0d1f;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  list-style-type: disc;
+  color: #f0f0f5;
+}
+
+/* ===== Tabela de treino principal ===== */
+.table-custom {
+  background: #0d0d1f;
+  border-radius: 8px;
+  color: #f0f0f5;
+  width: 100%;
+}
+.table-custom th {
+  background: #11112b;
+  color: #00c3ff;
+  font-weight: 600;
+}
+.table-custom td {
+  background: #1b1b2f;
+  color: #f0f0f5;
+}
+.table-custom tr + tr td {
+  border-top: 1px solid #333;
+}
+.table-custom tbody tr:hover td {
+  background: #2a1b3f;
+  color: #00c3ff;
+  cursor: pointer;
+}
+
+/* ===== Checkboxes ===== */
+.form-check-input:checked {
+  background-color: #00c3ff;
+  border-color: #00c3ff;
+}
+.form-check-label {
+  color: #f0f0f5;
+}
+
+/* ===== Histórico ===== */
+.history-item {
+  background: #0d0d1f;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  color: #f0f0f5;
+}
+.history-date {
+  color: #00c3ff;
+  font-size: 0.85rem;
+}
+.history-goal, .history-exp {
+  font-size: 0.8rem;
+  color: #f0f0f5;
+}
+
+/* ===== Footer ===== */
+footer {
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+/* ===== Spinner ===== */
+.spinner-border.text-light {
+  border-color: #00c3ff transparent #00c3ff transparent;
 }

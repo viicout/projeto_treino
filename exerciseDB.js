@@ -1,6 +1,5 @@
-// exerciseDB.js — banco de exercícios (CommonJS)
-
-function getExercises() {
+// exerciseDB.js
+export function getExercises() {
   return {
     musculacao: {
       peito: [
@@ -78,5 +77,3 @@ function getExercises() {
     ]
   };
 }
-
-module.exports = { getExercises };
