@@ -206,3 +206,12 @@ footer a:hover {
     font-size: 2.3rem;
   }
 }
+
+
+/* --- MODO PDF (temporário apenas no momento da captura) --- */
+#resultCard.pdf-mode * {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #0002 !important;
+  box-shadow: none !important;
+}
