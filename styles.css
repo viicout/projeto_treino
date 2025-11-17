@@ -1,0 +1,208 @@
+/* =========================================
+   RESET & BASE
+========================================= */
+* {
+  margin: 0;
+  padding: 0;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a12;
+  color: #f1f1f1;
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.container {
+  max-width: 1180px;
+}
+
+/* =========================================
+   CORES DO TEMA
+========================================= */
+:root {
+  --blue: #5b6cff;
+  --purple: #8a3df2;
+  --black: #0d0d0d;
+
+  --grad-main: linear-gradient(90deg, #5b6cff, #8a3df2, #000);
+  --glass: rgba(255,255,255,0.06);
+}
+
+/* =========================================
+   NAVBAR
+========================================= */
+.navbar {
+  backdrop-filter: blur(6px);
+  background: #000 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.navbar .nav-link {
+  font-weight: 500;
+  color: #fff !important;
+  opacity: 0.9;
+}
+
+.navbar .nav-link:hover {
+  opacity: 1;
+  color: var(--blue) !important;
+}
+
+/* =========================================
+   HERO
+========================================= */
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+/* =========================================
+   CARDS
+========================================= */
+.card {
+  background: rgba(20, 20, 40, 0.7) !important;
+  border: 1px solid rgba(120, 120, 255, 0.25) !important;
+  border-radius: 15px !important;
+  backdrop-filter: blur(5px);
+  color: #fff !important;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 12px rgba(138, 61, 242, 0.4);
+}
+
+/* Títulos coloridos */
+.text-primary {
+  color: var(--blue) !important;
+}
+
+.text-info {
+  color: #74befe !important;
+}
+
+.text-purple {
+  color: var(--purple) !important;
+}
+
+/* =========================================
+   FORMULÁRIOS
+========================================= */
+.form-control,
+.form-select {
+  background: #1b1b1b !important;
+  color: #fff !important;
+  border: 1px solid #333 !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: #242424 !important;
+  border-color: var(--purple) !important;
+  box-shadow: 0 0 0 0.25rem rgba(138, 61, 242, 0.3) !important;
+}
+
+/* Opções do select */
+.form-select option {
+  background: #1b1b1b;
+  color: #fff;
+}
+
+.form-label {
+  font-weight: 600;
+}
+
+/* Checkboxes */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--purple);
+}
+
+/* =========================================
+   BOTÕES
+========================================= */
+.btn-primary {
+  background: var(--grad-main) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.2);
+}
+
+.btn-outline-light:hover {
+  background: var(--purple) !important;
+  color: #fff !important;
+  border-color: var(--purple) !important;
+}
+
+/* =========================================
+   RESULTADOS
+========================================= */
+#resultado .workout-day {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+#resultado .workout-day h4 {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.exercise-item {
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.exercise-item:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+/* =========================================
+   LISTA DE EXERCÍCIOS
+========================================= */
+.exercise-card {
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.exercise-card h5 {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.exercise-card small {
+  opacity: 0.7;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+footer {
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+footer a:hover {
+  color: var(--blue) !important;
+}
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.3rem;
+  }
+}
