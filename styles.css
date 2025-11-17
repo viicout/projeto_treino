@@ -208,10 +208,12 @@ footer a:hover {
 }
 
 
-/* --- MODO PDF (temporário apenas no momento da captura) --- */
-#resultCard.pdf-mode * {
+/* MODO PDF - temporário (força fundo branco e texto preto apenas para captura) */
+.pdf-mode, .pdf-mode * {
   color: #000 !important;
-  background: #fff !important;
-  border-color: #0002 !important;
+  -webkit-text-fill-color: #000 !important;
+  background-color: #fff !important;
   box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
 }
